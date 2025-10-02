@@ -1,0 +1,16 @@
+{
+  "name": "dev-archive-manager",
+  "private": true,
+  "packageManager": "pnpm@9.0.0",
+  "scripts": {
+    "dev:infra": "docker compose up -d",
+    "dev:api": "pnpm --filter api-gateway dev",
+    "dev:web": "pnpm --filter desktop dev",
+    "dev:electron": "pnpm --filter desktop electron",
+    "dev:snap": "python workers/py/snap2txt_service/app.py",
+    "dev:figma": "python workers/py/figma_parser/app.py"
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.0"
+  }
+}
