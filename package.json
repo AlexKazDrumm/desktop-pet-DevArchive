@@ -3,6 +3,8 @@
   "private": true,
   "packageManager": "pnpm@9.0.0",
   "scripts": {
+    "dev": "concurrently --kill-others-on-fail -n api,web,snap,figma \"pnpm dev:api\" \"pnpm dev:web\" \"pnpm dev:snap\" \"pnpm dev:figma\"",
+    "build": "pnpm --filter api-gateway build && pnpm --filter desktop build",
     "dev:infra": "docker compose up -d",
     "dev:api": "pnpm --filter api-gateway dev",
     "dev:web": "pnpm --filter desktop dev",

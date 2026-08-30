@@ -2,5 +2,4 @@ fastapi==0.112.2
 uvicorn[standard]==0.30.6
 pydantic==2.8.2
 requests==2.32.3
-Pillow==10.4.0
-openai>=1.30.0
+python-dotenv==1.0.1

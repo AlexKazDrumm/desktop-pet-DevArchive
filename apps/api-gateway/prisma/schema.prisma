@@ -1,59 +1,116 @@
-datasource db { provider = "postgresql"; url = env("DATABASE_URL") }
-generator client { provider = "prisma-client-js" }
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
 
-enum ProjectKind { WEB DESKTOP MOBILE PARSER BOT LIBRARY SERVICE DATA_PIPELINE GAME OTHER }
-enum ProjectContext { WORK ORDER PET }
-enum ComponentRole { FRONTEND BACKEND MOBILE BOT DESIGN DOCS DEVOPS OTHER }
-enum LinkType { REPO_GITHUB REPO_GITLAB REPO_OTHER FIGMA DOCS ISSUE_TRACKER CI PROD_URL MIRROR OTHER }
-enum JobKind { SNAP_SCAN SNAP_CONCAT ANALYZE_STACK REPORT_BUILD }
-enum JobStatus { PENDING RUNNING SUCCEEDED FAILED CANCELLED }
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum ProjectKind {
+  WEB
+  DESKTOP
+  MOBILE
+  PARSER
+  BOT
+  LIBRARY
+  SERVICE
+  DATA_PIPELINE
+  GAME
+  OTHER
+}
+
+enum ProjectContext {
+  WORK
+  ORDER
+  PET
+}
+
+enum ComponentRole {
+  FRONTEND
+  BACKEND
+  MOBILE
+  BOT
+  DESIGN
+  DOCS
+  DEVOPS
+  OTHER
+}
+
+enum LinkType {
+  REPO_GITHUB
+  REPO_GITLAB
+  REPO_OTHER
+  FIGMA
+  DOCS
+  ISSUE_TRACKER
+  CI
+  PROD_URL
+  MIRROR
+  OTHER
+}
+
+enum JobKind {
+  SNAP_SCAN
+  SNAP_CONCAT
+  ANALYZE_STACK
+  REPORT_BUILD
+}
+
+enum JobStatus {
+  PENDING
+  RUNNING
+  SUCCEEDED
+  FAILED
+  CANCELLED
+}
 
 model Project {
-  id        String        @id @default(cuid())
-  name      String
-  kind      ProjectKind
-  context   ProjectContext?
-  localPath String?
-  notes     String?
+  id         String             @id @default(cuid())
+  name       String
+  kind       ProjectKind
+  context    ProjectContext?
+  localPath  String?
+  notes      String?
   components ProjectComponent[]
   links      ProjectLink[]
   scans      Scan[]
   artifacts  Artifact[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt  DateTime           @default(now())
+  updatedAt  DateTime           @updatedAt
 }
 
 model ProjectComponent {
-  id        String   @id @default(cuid())
+  id        String        @id @default(cuid())
   projectId String
-  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  project   Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
   role      ComponentRole
   name      String?
   localPath String?
   notes     String?
   links     ProjectLink[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
 }
 
 model ProjectLink {
-  id          String @id @default(cuid())
+  id          String            @id @default(cuid())
   projectId   String?
   componentId String?
-  project     Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  project     Project?          @relation(fields: [projectId], references: [id], onDelete: Cascade)
   component   ProjectComponent? @relation(fields: [componentId], references: [id], onDelete: Cascade)
   type        LinkType
   url         String
   label       String?
-  createdAt   DateTime @default(now())
+  createdAt   DateTime          @default(now())
 }
 
 model Scan {
-  id         String   @id @default(cuid())
-  projectId  String
-  project    Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  kind       JobKind
-  status     JobStatus @default(PENDING)
+  id          String    @id @default(cuid())
+  projectId   String
+  project     Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  kind        JobKind
+  status      JobStatus @default(PENDING)
   payloadJson Json?
   resultJson  Json?
   startedAt   DateTime?

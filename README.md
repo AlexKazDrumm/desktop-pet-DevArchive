@@ -1,106 +1,47 @@
-# Dev Archive Manager — monorepo
+# Dev Archive
 
-Приложение архива проектов с доступом к ФС, snap2txt, ссылками и Figma-пиксельным экспортом.
+Десктопное приложение для ведения каталога проектов, связанных репозиториев и локальных рабочих материалов. В одной карточке объединяются метаданные проекта, пути к исходникам, ссылки, снимки структуры каталогов и текстовые выгрузки файлов.
 
-## Стек
+Проект состоит из интерфейса на Electron и Next.js, API на NestJS и двух локальных Python-сервисов для обработки файлов и данных Figma.
 
-- Desktop UI: **Next.js 14** + **Electron**
-- API: **NestJS 10** + **Prisma** + **Postgres**
-- Очереди/кеш: **Redis** (зарезервировано; worker можно добавить позже)
-- Python: **FastAPI** сервисы
-  - `snap2txt_service` — дерево/конкатенация проекта
-  - `figma_parser` — дерево и pixel-perfect экспорт (SVG/PNG) по Figma API
+## Возможности
 
-## Быстрый старт
+- создание карточек проектов с типом, контекстом, заметками и локальным путём;
+- хранение ссылок на репозитории, документацию, макеты и рабочие сервисы;
+- описание составных частей проекта: frontend, backend, mobile, bot, design и DevOps;
+- поиск по названию и заметкам;
+- построение текстового дерева каталогов;
+- объединение текстовых файлов проекта в один снимок;
+- хранение сформированных артефактов в системном каталоге приложения;
+- получение структуры файла Figma и экспорт выбранных узлов в SVG или PNG.
 
-### 0) Зависимости
-- Node 20+, pnpm 9+ (`npm i -g pnpm`)
-- Python 3.10/3.11
-- Docker + Docker Compose
+## Архитектура
 
-### 1) Инфра
-```bash
-pnpm dev:infra            # поднимет postgres:5432 и redis:6379
-```
+- `apps/desktop` — Next.js 16 и Electron;
+- `apps/api-gateway` — NestJS, Prisma и PostgreSQL;
+- `workers/py/snap2txt_service` — обход каталогов и формирование текстовых снимков;
+- `workers/py/figma_parser` — работа с Figma API и графическими экспортами;
+- `docker-compose.yml` — PostgreSQL и Redis для локальной разработки.
 
-### 2) Установка пакетов
-```bash
-pnpm install
-```
+## Локальный запуск
 
-### 3) Настройка окружения API
-```bash
-cd apps/api-gateway
-cp .env.example .env
-# при необходимости выставь:
-# DATABASE_URL=postgresql://app:app@localhost:5432/appdb
-# REDIS_URL=redis://localhost:6379
-# PY_SNAP_URL=http://127.0.0.1:8801
-# PY_FIGMA_URL=http://127.0.0.1:8802
-cd ../../
-```
+Понадобятся Node.js 20+, pnpm 9+, Python 3.10+ и Docker.
 
-### 4) Prisma (миграции)
-```bash
-cd apps/api-gateway
-pnpm prisma:migrate         # введи имя миграции: init
-pnpm prisma:generate
-pnpm dev                    # API на http://127.0.0.1:7780
-```
+1. Установить JavaScript-зависимости: `pnpm install`.
+2. Создать `apps/api-gateway/.env` на основе `apps/api-gateway/.env.example`.
+3. Создать корневой `.env` на основе `.env.example` и указать `FIGMA_TOKEN`, если используются операции Figma.
+4. Установить Python-зависимости:
+   - `pip install -r workers/py/snap2txt_service/requirements.txt`;
+   - `pip install -r workers/py/figma_parser/requirements.txt`.
+5. Запустить PostgreSQL и Redis: `pnpm dev:infra`.
+6. Создать структуру БД: `pnpm --filter api-gateway prisma:migrate`.
+7. Запустить API, интерфейс и Python-сервисы: `pnpm dev`.
+8. В отдельном терминале открыть Electron-оболочку: `pnpm dev:electron`.
 
-### 5) Python сервисы
+## Планы развития
 
-#### snap2txt_service
-```bash
-cd workers/py/snap2txt_service
-python -m venv .venv && . .venv/bin/activate   # Windows: .venv\Scripts\activate
-pip install -r requirements.txt
-python app.py        # http://127.0.0.1:8801
-```
-
-#### figma_parser
-```bash
-cd ../figma_parser
-python -m venv .venv && . .venv/bin/activate
-pip install -r requirements.txt
-export FIGMA_TOKEN=...   # или set FIGMA_TOKEN=... в Windows
-python app.py            # http://127.0.0.1:8802
-```
-
-### 6) Desktop UI
-В новом терминале:
-```bash
-cd apps/desktop
-pnpm dev         # Next dev server на 3000
-# в отдельном окне:
-pnpm electron    # Electron откроет http://127.0.0.1:3000
-```
-
-> UI ожидает API на `http://127.0.0.1:7780`. Можно переопределить переменной `NEXT_PUBLIC_API_URL`.
-
-## Как пользоваться
-
-1. В Desktop: **Создать проект** → укажи *Название* и *Тип*. (Опционально `localPath`, чтобы работал snap2txt).
-2. На главной странице проекта нажми **Snap Tree** или **Concat** — API вызовет `snap2txt_service`.  
-   Результаты сохраняются в системной папке приложения:
-   - Windows: `%APPDATA%/DevArchiveManager/data/projects/<id>/artifacts/`
-   - macOS: `~/Library/Application Support/DevArchiveManager/data/projects/<id>/artifacts/`
-   - Linux: `~/.config/DevArchiveManager/data/projects/<id>/artifacts/`
-
-## Структура
-```
-apps/
-  api-gateway/       # NestJS API + Prisma
-  desktop/           # Next.js + Electron
-workers/
-  py/
-    snap2txt_service/
-    figma_parser/
-docker-compose.yml
-```
-
-## Дальше
-- Добавить страницу "детали проекта" (артефакты/сканы/ссылки).
-- Провести интеграцию Figma UI вызовов в Desktop.
-- Подключить BullMQ воркера и прогресс-ивенты.
-- Добавить генерацию отчетов (PDF/HTML).
+- закончить экран подробностей проекта;
+- подключить Figma-операции в desktop UI;
+- добавить очередь BullMQ и события прогресса;
+- подготовить стабильную схему миграций и автоматические тесты;
+- собрать установщик и пользовательскую документацию.

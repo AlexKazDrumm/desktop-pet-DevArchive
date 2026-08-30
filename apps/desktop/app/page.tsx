@@ -15,6 +15,16 @@ export default function Page() {
   };
   useEffect(()=>{ load().catch(console.error); },[]);
 
+  const runAction = async (projectId: string, action: 'scan' | 'concat') => {
+    try {
+      const { data } = await axios.post(API + `/projects/${projectId}/${action}`);
+      alert(data.status === 'SUCCEEDED' ? 'Операция завершена' : `Ошибка: ${data.error || 'операция не выполнена'}`);
+    } catch (error) {
+      console.error(error);
+      alert('Не удалось выполнить операцию');
+    }
+  };
+
   return (
     <div>
       <div style={{display:'flex', gap:8, marginBottom:10}}>
@@ -29,8 +39,8 @@ export default function Page() {
             {p.context ? <div style={{opacity:.8}}>Контекст: {p.context}</div> : null}
             {p.localPath ? <div style={{opacity:.8}}>Путь: {p.localPath}</div> : null}
             <div style={{display:'flex', gap:8, marginTop:10}}>
-              <button onClick={async()=>{ await axios.post(API + `/projects/${p.id}/scan`); alert('Запущен scan'); }} style={{background:'#ffd700', color:'#000', border:0, borderRadius:8, padding:'6px 10px'}}>Snap Tree</button>
-              <button onClick={async()=>{ await axios.post(API + `/projects/${p.id}/concat`); alert('Запущен concat'); }} style={{background:'#ffd700', color:'#000', border:0, borderRadius:8, padding:'6px 10px'}}>Concat</button>
+              <button onClick={()=>runAction(p.id, 'scan')} style={{background:'#ffd700', color:'#000', border:0, borderRadius:8, padding:'6px 10px'}}>Snap Tree</button>
+              <button onClick={()=>runAction(p.id, 'concat')} style={{background:'#ffd700', color:'#000', border:0, borderRadius:8, padding:'6px 10px'}}>Concat</button>
             </div>
           </div>
         ))}
